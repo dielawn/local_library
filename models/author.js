@@ -24,17 +24,12 @@ AuthorSchema.virtual('name').get(function () {
 AuthorSchema.virtual('url').get(function () {
     return `/catalog/author/${this._id}`;
 });
-//formatted date of birth
-AuthorSchema.virtual('date_of_birth_formatted').get(function () {
+//lifespan
+AuthorSchema.virtual('lifespan').get(function () {
     const birthDate = DateTime.fromJSDate(this.date_of_birth);
-    return birthDate.isValid ? birthDate.toLocaleString(DateTime.DATE_MED) : 'DOB Unknown'
-});
-//formatted date of death
-AuthorSchema.virtual('date_of_death_formatted').get(function () {
-    const deathDate = DateTime.fromJSDate(this.date_of_death)
-    return deathDate.isValid ? deathDate.toLocaleString(DateTime.DATE_MED) : 'Unknown'
-});
-
+    const deathDate = DateTime.fromJSDate(this.date_of_death);
+   return `${birthDate.isValid ? birthDate.toLocaleString(DateTime.DATE_MED) : 'DOB Unknown'} - ${deathDate.isValid ? deathDate.toLocaleString(DateTime.DATE_MED) : ''}`
+})
 
 
 module.exports = mongoose.model('Author', AuthorSchema)
