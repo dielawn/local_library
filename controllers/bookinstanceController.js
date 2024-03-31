@@ -3,7 +3,12 @@ const asyncHandler = require('express-async-handler');
 
 //display list of all BookInstances cRud
 exports.bookinstance_list = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: BookInstance list');
+    const allBookInstances = await BookInstance.find().populate('book').exec();
+
+    res.render('bookinstance_list', {
+        title: 'Book Instance List',
+        bookinstance_list: allBookInstances,
+    });
 });
 
 //display detail page for a specific BookInstance cRud
