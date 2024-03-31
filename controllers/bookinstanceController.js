@@ -1,4 +1,6 @@
 const BookInstance = require('../models/bookinstance');
+const Book = require("../models/book");
+
 
 const { body, validationResult } = require("express-validator");
 
@@ -33,13 +35,59 @@ exports.bookinstance_detail = asyncHandler(async (req, res, next) => {
 
 //display BookInstance create form on GET Crud
 exports.bookinstance_create_get = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: BookInstance create GET');
-});
+    const allBooks = await Book.find({}, "title").sort({ title: 1 }).exec();
+  
+    res.render("bookinstance_form", {
+      title: "Create BookInstance",
+      book_list: allBooks,
+    });
+  }); 
 
 //handle BookInstance create on POST Crud
-exports.bookinstance_create_post = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: BookInstance create POST');
-});
+exports.bookinstance_create_post = [
+    body('book', 'Book must be specified').trim().isLength({ min: 1 }).escape(),
+    body('imprint', 'Imprint must be specified')
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+    body('status').escape(),
+    body('due_back', 'Invalid date')
+        .optional({ values: 'falsy' })
+        .isISO8601()
+        .toDate(),
+
+    //process req after val/san
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        //create BookInstance obj w/ escaped and trimmed data
+        const bookInstance = new BookInstance({
+            book: req.body.book,
+            imprint: req.body.imprint,
+            status: req.body.status,
+            due_back: req.body.due_back,
+        });
+
+        if (!errors.isEmpty()) {
+            //is error
+            //render form again w/ san data and error msgs
+            const allBooks = await Book.find({}, 'title').sort({ title: 1 }).exec();
+
+            res.render("bookinstance_form", {
+                title: "Create BookInstance",
+                book_list: allBooks,
+                selected_book: bookInstance.book._id,
+                errors: errors.array(),
+                bookinstance: bookInstance,
+              });
+            return;
+        } else {
+            //data is valid
+            await bookInstance.save();
+            res.redirect(bookInstance.url);
+        }
+    }),
+];
 
 //display BookInstance update form on GET crUd
 exports.bookinstance_update_get = asyncHandler(async (req, res, next) => {

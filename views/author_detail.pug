@@ -9,6 +9,7 @@ block content
 
     h4 Books
     if author_books.length
+     
       dl
         each book in author_books
           dt
@@ -16,3 +17,7 @@ block content
           dd #{book.summary}
     else
       p This author has no books.
+
+  hr
+  p
+    a(href=author.url+'/delete') Delete author
