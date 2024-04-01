@@ -140,29 +140,28 @@ exports.author_delete_post = asyncHandler(async (req, res, next) => {
 
 //display author update form on GET
 exports.author_update_get = asyncHandler(async (req, res, next) => {
-    const [book, allAuthors, allGenres] = await Promise.all([
-        Book.findById(req.params.id).populate('author').exec(),
-        Author.find().sort({ family_name: 1 }).exec(),
+    const [author, allBooksByAuthor, allGenres] = await Promise.all([
+        Author.findById(req.params.id).exec(),
+        Book.find({ author: req.params.id }, 'title summary').exec(),
         Genre.find().sort({ name: 1 }).exec(),
     ]);
 
-    if (book === null) {
+    if (author === null) {
         //no results
-        const err = new Error('Book not found');
+        const err = new Error('Author not found');
         err.status = 404;
         return next(err);
     }
 
-    //mark selected genres as checked
     allGenres.forEach((genre) => {
-        if (book.genre.includes(genre._id)) genre.checked = 'true';
+        if (allBooksByAuthor.genre.includes(genre._id)) genre.checked = 'true';
     });
 
-    res.render('book_form', {
-        title: 'Update Book',
-        authors: allAuthors,
+    res.render('author_form', {
+        title: 'Update Author',
+        author: author,
         genres: allGenres,
-        book: book,
+        author_books: allBooksByAuthor,
     });
 });
 
