@@ -167,76 +167,42 @@ exports.author_update_get = asyncHandler(async (req, res, next) => {
 
 //handle author update on POST
 exports.author_update_post = [
-    (req, res, next) => {
-        if (!Array.isArray(req.body.genre)) {
-            req.body.genre =
-                typeof req.body.genre === 'undefined' ? [] : [req.body.genre];
-        }
-        next();
-    },
 
-    //san & val
-    body('title', 'Title must not be empty.')
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
     body('author', 'Author must not be empty.')
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body('summary', 'Summary must not be empty.')
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
-    body('isbn', 'ISBN must not be empty.')
         .trim()
         .isLength({ min: 1 })
         .escape(),
     body('genre.*').escape(),
 
-    //process req after  val/san
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
-
-        //create Book obj w/ escaped/trimmed data & old id
-        const book = new Book({
-            title: req.body.title,
-            author: req.body.author,
-            summary: req.body.summary,
-            isbn: req.body.isbn,
-            genre: typeof req.body.genre === 'undefined' ? [] : req.body.genre,
-            _id: req.params.id, //this is required or a new id will be assigned
+        
+        const author = new Author({
+            first_name: req.body.first_name,
+            family_name: req.body.family_name,
+            date_of_birth: req.body.date_of_birth,
+            date_of_death: req.body.date_of_death,
         });
 
         if (!errors.isEmpty()) {
             //is error
 
-            //all authors and genres for form
-            const [allAuthors, allGenres] = await Promise.all([
-                Author.find().sort({ family_name: 1 }).exec(),
-                Genre.find().sort({ name: 1 }).exec(),
+            //all author books
+            const [allBooksByAuthor, ] = await Promise.all([
+                Book.find().sort({ author_books: 1 }).exec()
             ]);
 
-            //mark selected genres as checked
-            for (const genre of allGenres) {
-                if (book.genre.indexOf(genre._id) > -1) {
-                    genre.checked = 'true';
-                }
-            }
-
-            res.render('book_form', {
-                title: 'Update Book',
-                authors: allAuthors,
-                genres: allGenres,
-                book: book,
+            res.render('author_form', {
+                title: 'Update Author',
+                book: allBooksByAuthor,
                 errors: errors.array(),
             });
             return
         } else {
-            //data from form is valid update the record
-            const updatedBook = await Book.findByIdAndUpdate(req.params.id, book, {});
-            //redirect to book detail page
-            res.redirect(updatedBook.url);
+            //is valid
+            const updatedAuthor = await Author.findByIdAndUpdate(req.params.id, author, {});
+            //redirect to author detail page
+            res.redirect(updatedAuthor.url);
         }
     }),
 ];
