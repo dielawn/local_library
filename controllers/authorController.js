@@ -182,11 +182,11 @@ exports.author_update_post = [
             family_name: req.body.family_name,
             date_of_birth: req.body.date_of_birth,
             date_of_death: req.body.date_of_death,
+            _id: req.params.id, //required to update existing author
         });
 
         if (!errors.isEmpty()) {
             //is error
-
             //all author books
             const [allBooksByAuthor, ] = await Promise.all([
                 Book.find().sort({ author_books: 1 }).exec()
