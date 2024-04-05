@@ -140,10 +140,7 @@ exports.author_delete_post = asyncHandler(async (req, res, next) => {
 
 //display author update form on GET
 exports.author_update_get = asyncHandler(async (req, res, next) => {
-    const [author, allBooksByAuthor] = await Promise.all([
-        Author.findById(req.params.id).exec(),
-        Book.find({ author: req.params.id }, 'title summary').exec(),
-    ]);
+    const author = await Author.findById(req.params.id).exec()
 
     if (author === null) {
         //no results
@@ -155,21 +152,26 @@ exports.author_update_get = asyncHandler(async (req, res, next) => {
     res.render('author_form', {
         title: 'Update Author',
         author: author,
-        author_books: allBooksByAuthor,
     });
 });
 
 //handle author update on POST
 exports.author_update_post = [
     //sanitize & validate
-    body('first_name', 'First name must not be empty.')
+    body("first_name")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
-    body('family_name', 'Family name must not be empty.')
+        .escape()
+        .withMessage("First name must be specified.")
+        .isAlphanumeric()
+        .withMessage("First name has non-alphanumeric characters."),
+    body("family_name")
         .trim()
         .isLength({ min: 1 })
-        .escape(),
+        .escape()
+        .withMessage("Family name must be specified.")
+        .isAlphanumeric()
+        .withMessage("Family name has non-alphanumeric characters."),
    
     //process req after san/val
     asyncHandler(async (req, res, next) => {
@@ -185,22 +187,17 @@ exports.author_update_post = [
 
         if (!errors.isEmpty()) {
             //is error
-            //all author books
-            const [allBooksByAuthor, ] = await Promise.all([
-                Book.find().sort({ author_books: 1 }).exec()
-            ]);
-
             res.render('author_form', {
-                title: 'Update Author',
-                book: allBooksByAuthor,
+                title: "Update Author",
+                author: author,
                 errors: errors.array(),
             });
             return
         } else {
             //is valid
-            const updatedAuthor = await Author.findByIdAndUpdate(req.params.id, author, {});
+            await Author.findByIdAndUpdate(req.params.id, author);
             //redirect to author detail page
-            res.redirect(updatedAuthor.url);
+            res.redirect(author.url);
         }
     }),
 ];

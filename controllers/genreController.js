@@ -76,7 +76,10 @@ exports.genre_create_post = [
 
 //display Genre delete form on GET
 exports.genre_delete_get = asyncHandler(async (req, res, next) => {
-    const genre = await Genre.findById(req.params.id).exec()
+    const [genre, booksInGenre] = await Promise.all([
+        Genre.findById(req.params.id).exec(),
+        Book.find({ genre: req.params.id }, 'title summary').exec(),
+    ]); 
 
     if (genre === null) {
         //nothing to delete
@@ -86,13 +89,28 @@ exports.genre_delete_get = asyncHandler(async (req, res, next) => {
     res.render('genre_delete', {
         title: 'Delete Genre',
         genre: genre,
+        genre_books: booksInGenre,
     });
 });
 
 //handle Genre delete on POST
 exports.genre_delete_post = asyncHandler(async (req, res, next) => {
-    await Genre.findByIdAndDelete(req.params.id);
-    res.redirect('/catalog/genres')
+   const [genre, booksInGenre] = await Promise.all([
+    Genre.findById(req.params.id).exec(),
+    Book.find({ genre: req.params.id}, 'title summary').exec(),
+   ]);
+
+   if (booksInGenre.length > 0) {
+    res.render('genre_delete', {
+        title: 'Delete Genre',
+        genre: genre,
+        genre_books: booksInGenre,
+    });
+    return 
+    } else { 
+        await Genre.findByIdAndDelete(req.params.id);
+        res.redirect('/catalog/genres');
+    }
 });
 
 //display genre update form on GET
@@ -114,9 +132,9 @@ exports.genre_update_get = asyncHandler(async (req, res, next) => {
 
 //handle Genre update on POST
 exports.genre_update_post = [
-    body('name', 'Genre must not be empty.')
+    body('name', 'Genre must be at least 3 characters.')
         .trim()
-        .isLength({ min: 1 })
+        .isLength({ min: 3 })
         .escape(),
 
     asyncHandler(async (req, res, next) => {
@@ -135,8 +153,8 @@ exports.genre_update_post = [
             }); 
         return
         } else {
-            const updatedGenre = await Genre.findByIdAndUpdate(req.params.id, { name: req.body.name}, { new: true });
-            res.redirect(updatedGenre.url)
+            await Genre.findByIdAndUpdate(req.params.id, { name: req.body.name}, { new: true });
+            res.redirect(genre.url)
         }
     }),    
 ];
