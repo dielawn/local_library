@@ -189,7 +189,7 @@ exports.book_update_post = [
         next();
     },
 
-    //san & val
+    //sanitize & validate
     body('title', 'Title must not be empty.')
         .trim()
         .isLength({ min: 1 })
@@ -258,9 +258,23 @@ exports.book_update_post = [
 //delete
 //display Book delete form on GET
 exports.book_delete_get = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: Book delete GET');
+    //get details of book
+    const [book] = await Promise.all([
+        Book.findById(req.params.id).populate('title').exec(),
+    ]);
+
+    if (book === null) {
+        //nothing to delete
+        res.redirect('/catalog/books');
+    }
+
+    res.render('book_delete', {
+        title: 'Delete Book',
+                book: book,
+    });
 });
 //handle Book delete on POST
 exports.book_delete_post = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED Book delete POST')
+   await Book.findByIdAndDelete(req.params.id);
+   res.redirect('/catalog/books');
 })

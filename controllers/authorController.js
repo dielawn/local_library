@@ -143,7 +143,6 @@ exports.author_update_get = asyncHandler(async (req, res, next) => {
     const [author, allBooksByAuthor, allGenres] = await Promise.all([
         Author.findById(req.params.id).exec(),
         Book.find({ author: req.params.id }, 'title summary').exec(),
-        Genre.find().sort({ name: 1 }).exec(),
     ]);
 
     if (author === null) {
@@ -153,27 +152,26 @@ exports.author_update_get = asyncHandler(async (req, res, next) => {
         return next(err);
     }
 
-    allGenres.forEach((genre) => {
-        if (allBooksByAuthor.genre.includes(genre._id)) genre.checked = 'true';
-    });
-
     res.render('author_form', {
         title: 'Update Author',
         author: author,
-        genres: allGenres,
         author_books: allBooksByAuthor,
     });
 });
 
 //handle author update on POST
 exports.author_update_post = [
-
-    body('author', 'Author must not be empty.')
+    //sanitize & validate
+    body('first_name', 'First name must not be empty.')
         .trim()
         .isLength({ min: 1 })
         .escape(),
-    body('genre.*').escape(),
-
+    body('family_name', 'Family name must not be empty.')
+        .trim()
+        .isLength({ min: 1 })
+        .escape(),
+   
+    //process req after san/val
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
         
