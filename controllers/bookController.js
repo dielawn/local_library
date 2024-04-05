@@ -162,7 +162,7 @@ exports.book_update_get = asyncHandler(async (req, res, next) => {
 
     if (book === null) {
         //no results
-        const err = new Error('Book not found');
+        const err = new Error(`Book: "${book.title}" not found`);
         err.status = 404;
         return next(err);
     }
@@ -259,9 +259,7 @@ exports.book_update_post = [
 //display Book delete form on GET
 exports.book_delete_get = asyncHandler(async (req, res, next) => {
     //get details of book
-    const [book] = await Promise.all([
-        Book.findById(req.params.id).populate('title').exec(),
-    ]);
+    const book = await Book.findById(req.params.id).exec()
 
     if (book === null) {
         //nothing to delete
@@ -270,7 +268,7 @@ exports.book_delete_get = asyncHandler(async (req, res, next) => {
 
     res.render('book_delete', {
         title: 'Delete Book',
-                book: book,
+        book: book,
     });
 });
 //handle Book delete on POST

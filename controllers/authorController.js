@@ -140,7 +140,7 @@ exports.author_delete_post = asyncHandler(async (req, res, next) => {
 
 //display author update form on GET
 exports.author_update_get = asyncHandler(async (req, res, next) => {
-    const [author, allBooksByAuthor, allGenres] = await Promise.all([
+    const [author, allBooksByAuthor] = await Promise.all([
         Author.findById(req.params.id).exec(),
         Book.find({ author: req.params.id }, 'title summary').exec(),
     ]);
