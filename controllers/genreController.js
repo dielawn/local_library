@@ -76,12 +76,23 @@ exports.genre_create_post = [
 
 //display Genre delete form on GET
 exports.genre_delete_get = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: Genre delte GET');
+    const genre = await Genre.findById(req.params.id).exec()
+
+    if (genre === null) {
+        //nothing to delete
+        res.redirect('/catalog/genres')
+    }
+
+    res.render('genre_delete', {
+        title: 'Delete Genre',
+        genre: genre,
+    });
 });
 
 //handle Genre delete on POST
 exports.genre_delete_post = asyncHandler(async (req, res, next) => {
-    res.send('NOT IMPLEMENTED: Genre delete POST');
+    await Genre.findByIdAndDelete(req.params.id);
+    res.redirect('/catalog/genres')
 });
 
 //display genre update form on GET
