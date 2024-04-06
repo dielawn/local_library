@@ -283,7 +283,7 @@ exports.book_delete_post = asyncHandler(async (req, res, next) => {
     ]);
 
     if (book === null) {
-        // No results.
+        //no results.
         res.redirect("/catalog/books");
     }
 
